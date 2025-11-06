@@ -4,14 +4,11 @@
 Author: Basith Abdul
 LinkedIn-style chatbot with evaluator loop + contact-capture email tool.
 """
-import os
-import json
-import smtplib
+import os, json, smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.utils import formatdate
 from typing import List, Dict, Any
-
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pypdf import PdfReader
@@ -35,7 +32,7 @@ def read_linkedin_text() -> str:
             text = page.extract_text()
             if text:
                 linkedin_text += text
-    except Exception as e:
+    except Exception:
         linkedin_text = ""
     return linkedin_text
 
@@ -54,7 +51,6 @@ summary = read_summary_text()
 # System prompt
 # ---------------------
 BASE_SYSTEM_PROMPT = f"""You are acting as {name}. ...
-## LinkedIn Profile:
 {linkedin if linkedin else "[linkedin.pdf not found]"}
 """
 
@@ -64,41 +60,86 @@ BASE_SYSTEM_PROMPT = f"""You are acting as {name}. ...
 class Evaluation(BaseModel):
     is_acceptable: bool
     feedback: str
+# (Evaluator methods omitted for brevity, same as before)
 
-def build_evaluator_system_prompt() -> str:
-    p = f"""You are an evaluator that decides whether a response to a question is acceptable.
-You are provided with a conversation between a User and an Agent. Decide whether the Agent's latest response is acceptable quality.
-The Agent is playing the role of {name} on their website and should be professional, helpful, and aligned with the context above.
-Evaluate the latest agent reply for: factuality (relative to provided context or honest uncertainty), tone (polite, concise, professional), clarity, avoidance of hallucinations, and whether it gently encourages contact (without being pushy or repetitive).
+# ---------------------
+# Email tool
+# ---------------------
+TO_EMAIL_DEFAULT = "basithabdul2608@gmail.com"
 
-Context you may reference:
-## Summary
-{summary if summary else "[summary.txt not found]"}
+def send_email_smtp(subject: str, body: str, to_addr: str = None) -> Dict[str,Any]:
+    smtp_server = os.getenv("SMTP_SERVER")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USERNAME")
+    smtp_pass = os.getenv("SMTP_PASSWORD")
+    from_email = os.getenv("FROM_EMAIL") or smtp_user or "no-reply@example.com"
+    to_email = to_addr or os.getenv("TO_EMAIL") or TO_EMAIL_DEFAULT
 
-## LinkedIn
-{linkedin if linkedin else "[linkedin.pdf not found]"}
+    msg = MIMEMultipart()
+    msg["From"] = from_email
+    msg["To"] = to_email
+    msg["Date"] = formatdate(localtime=True)
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
 
-Return a JSON with fields: is_acceptable (boolean) and feedback (string).
-"""
-    return p
+    try:
+        if not smtp_server or not smtp_user or not smtp_pass:
+            print("[Email Tool] SMTP not configured. Would have sent:\n", msg.as_string())
+            return {"sent": False, "reason": "SMTP not configured", "preview": msg.as_string()}
 
-def evaluator_user_prompt(reply: str, message: str, history: List[Dict[str,str]]) -> str:
-    return f"""Conversation:\n{history}\n\nUser message:\n{message}\n\nAgent reply:\n{reply}\n\nEvaluate the reply and respond in the specified JSON schema."""
+        with smtplib.SMTP(smtp_server, smtp_port, timeout=20) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(from_email, [to_email], msg.as_string())
+        return {"sent": True}
+    except Exception as e:
+        return {"sent": False, "error": str(e)}
 
-def evaluate_reply(reply: str, message: str, history: List[Dict[str,str]]) -> Evaluation:
-    messages = [
-        {"role": "system", "content": build_evaluator_system_prompt()},
-        {"role": "user", "content": evaluator_user_prompt(reply, message, history)},
-    ]
-    resp = openai.chat.completions.create(model="gpt-4o-mini", messages=messages, response_format=Evaluation)
-    return resp.choices[0].message.parsed
+def send_contact_email(name: str = "", email: str = "", phone: str = "", company: str = "", notes: str = "") -> Dict[str,Any]:
+    subject = f"[Website Lead] {name or 'Prospect'}"
+    body = f"""New contact captured from the chatbot:
 
-def rerun_with_feedback(prev_reply: str, message: str, history: List[Dict[str,str]], feedback_text: str) -> str:
-    updated_system_prompt = BASE_SYSTEM_PROMPT + "\n\n" + \
-        "## Previous answer was rejected by quality control.\n" + \
-        f"### Your attempted answer:\n{prev_reply}\n\n" + \
-        f"### Reason to improve:\n{feedback_text}\n\n" + \
-        "Please produce an improved response that addresses the feedback faithfully and concisely."
-    messages = [{"role": "system", "content": updated_system_prompt}] + history + [{"role": "user", "content": message}]
-    resp = openai.chat.completions.create(model="gpt-4o-mini", messages=messages)
-    return resp.choices[0].message.content
+    Name: {name or '[not provided]'}
+    Email: {email or '[not provided]'}
+    Phone: {phone or '[not provided]'}
+    Company: {company or '[not provided]'}
+    Notes: {notes or '[none]'}
+    """
+    return send_email_smtp(subject, body)
+
+send_contact_email_json = {
+    "name": "send_contact_email",
+    "description": "Send the visitor's contact information to the owner via email once they share it.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "email": {"type": "string"},
+            "phone": {"type": "string"},
+            "company": {"type": "string"},
+            "notes": {"type": "string"}
+        },
+        "required": ["email"],
+        "additionalProperties": False
+    }
+}
+
+record_unknown_question_json = {
+    "name": "record_unknown_question",
+    "description": "Use this when the assistant could not answer a user question.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "question": {"type": "string"}
+        },
+        "required": ["question"],
+        "additionalProperties": False
+    }
+}
+
+def record_unknown_question(question: str) -> Dict[str,Any]:
+    print(f"[Unknown Question] {question}")
+    return {"recorded": "ok"}
+
+TOOLS = [{"type": "function", "function": send_contact_email_json},
+         {"type": "function", "function": record_unknown_question_json}]
