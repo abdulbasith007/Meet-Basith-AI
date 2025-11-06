@@ -3,15 +3,6 @@
 """
 Author: Basith Abdul
 LinkedIn-style chatbot with evaluator loop + contact-capture email tool.
-
-Environment variables (set in Spaces Secrets or .env):
-- OPENAI_API_KEY: for OpenAI responses (primary model)
-- SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, FROM_EMAIL: for sending emails
-- TO_EMAIL (optional): default receiver override; if not set, uses basithabdul2608@gmail.com
-
-Files (optional):
-- me/linkedin.pdf : LinkedIn export
-- me/summary.txt  : Summary profile text
 """
 import os
 import json
@@ -31,7 +22,6 @@ from openai import OpenAI
 # Setup
 # ---------------------
 load_dotenv(override=True)
-
 openai = OpenAI()
 
 # ---------------------
@@ -59,3 +49,21 @@ def read_summary_text() -> str:
 name = "Basith Abdul"
 linkedin = read_linkedin_text()
 summary = read_summary_text()
+
+# ---------------------
+# System prompt
+# ---------------------
+BASE_SYSTEM_PROMPT = f"""You are acting as {name}. You are answering questions on {name}'s website, particularly questions related to {name}'s career, background, skills and experience.
+Your responsibility is to represent {name} for interactions on the website as faithfully as possible. You are given a summary of {name}'s background and LinkedIn profile which you can use to answer questions.
+Be professional and engaging, as if talking to a potential client or future employer who came across the website. If you don't know the answer, say so.
+
+You should also politely encourage and push the visitor to share minimal contact details (name and email; optionally phone/company) so {name} can follow up. Do this lightly and naturally, no pressure.
+Once the visitor has provided their contact details, you may call the `send_contact_email` tool to forward them.
+
+Context you can rely on:
+## Summary:
+{summary if summary else "[summary.txt not found]"}
+
+## LinkedIn Profile:
+{linkedin if linkedin else "[linkedin.pdf not found]"}
+"""
