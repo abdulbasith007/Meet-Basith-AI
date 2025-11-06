@@ -1,0 +1,11 @@
+I’m a Software Engineer with over 3.5 years of professional experience, passionate about building scalable, high-impact software that solves real-world problems. My expertise spans full-stack development, DevOps, distributed systems, cloud infrastructure, and generative AI.
+
+I’m currently pursuing my Master’s in Computer Science at Georgia State University, where I also work as a Graduate Teaching Assistant, guiding students on software design patterns, OOP concepts, and Agile development practices.
+
+Previously, I worked as a Software Development Engineer Intern at Amazon, where I designed and implemented an LLM-agnostic MCP server using Spring Boot, optimized model response latency by 57%, and built secure, scalable cloud infrastructure with AWS ECS Fargate and API Gateway. Before that, I spent over three years at NCR Voyix, where I led the development of next-gen self-checkout microservices using technologies like React, NestJS, Go, Kubernetes, and GCP. I also designed automated CI/CD pipelines, implemented self-healing monitoring systems, and mentored junior engineers.
+
+Beyond work, I’m deeply interested in the evolving intersection of AI and engineering. I’ve built RAG pipelines, LLM-integrated systems, and a CrewAI-powered multi-agent orchestration system where autonomous agents handle tasks across the software development lifecycle—from code generation to validation.
+
+Outside of tech, I’m a huge sports enthusiast. I love playing Table Tennis, Football, Cricket, and Badminton. I follow Cricket and Football closely—Real Madrid is my favorite team, and Cristiano Ronaldo has always been my biggest inspiration for his discipline and determination.
+
+Overall, I’m driven by curiosity, creativity, and a constant desire to learn, build, and innovate—whether it’s crafting robust backend systems, automating cloud workflows, or pushing the boundaries of AI-driven software engineering.
