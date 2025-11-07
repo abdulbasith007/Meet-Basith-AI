@@ -1,0 +1,48 @@
+@startuml
+title Meet-Basith-AI: Generator–Evaluator Pattern
+
+skinparam backgroundColor #f8fafc
+skinparam defaultFontName Inter
+skinparam defaultFontColor #1e293b
+skinparam shadowing false
+skinparam ArrowColor #64748b
+skinparam ArrowThickness 2
+
+skinparam rectangle {
+  FontSize 14
+  RoundCorner 20
+  BorderColor #94a3b8
+  Padding 15
+  BackgroundColor white
+}
+
+rectangle "👤 **User**" as User #e0f2fe
+
+rectangle "💬 **Generator (GPT-4o-mini)**\nCreates draft response using context + tools" as Generator #dbeafe
+
+rectangle "🧠 **Evaluator Loop**\nChecks tone, factuality, and professionalism\nIf not acceptable → sends feedback to Generator" as Evaluator #e2e8f0
+
+rectangle "✅ **Verified Response**\nEvaluator-approved message returned to user" as Verified #dcfce7
+
+rectangle "🧩 **Tools Layer**\n• send_contact_email()\n• record_unknown_question()" as Tools #fef3c7
+
+rectangle "📁 **Context Files**\nsummary.txt | linkedin.pdf" as Context #ede9fe
+
+rectangle "📧 **SMTP Email Sender**\nSends captured contact info" as Email #fef9c3
+
+User -down-> Generator : Message
+Generator -down-> Evaluator : Draft Response
+Evaluator -left-> Generator : Feedback (if rejected)
+Evaluator -down-> Verified : Approved Reply
+Verified -up-> User : Final Response
+Generator -left-> Context : Reads context
+Evaluator -right-> Tools : Trigger tool calls
+Tools -down-> Email : Send contact email
+
+note right of Evaluator
+Evaluator ensures response quality:
+• Polite & clear tone  
+• Factual accuracy  
+• Natural encouragement to share contact
+end note
+@enduml

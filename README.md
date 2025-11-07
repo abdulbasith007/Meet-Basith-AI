@@ -3,6 +3,8 @@
 **Meet-Basith-AI** is a LinkedIn-style chatbot designed to act as a professional digital twin of **Basith Abdul** — simulating intelligent, context-aware conversations about his career, technical projects, and background.  
 Built with **Python**, **Gradio**, and **OpenAI GPT-4o-mini**, the chatbot includes an evaluator loop for quality assurance and a built-in contact-capture email tool.
 
+![architecture_diagram](./architecture.png)
+
 ---
 
 ## Features
