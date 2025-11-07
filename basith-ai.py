@@ -26,6 +26,20 @@ from pydantic import BaseModel
 from pypdf import PdfReader
 import gradio as gr
 from openai import OpenAI
+import gradio.themes.base
+from gradio.themes.utils import colors, fonts, sizes
+
+# Custom theme
+basith_theme = gr.themes.Soft(
+    primary_hue=colors.blue,
+    secondary_hue=colors.sky,
+    font=fonts.GoogleFont("Inter"),
+).set(
+    body_background_fill="linear-gradient(to right, #f8fafc, #eef2ff)",
+    button_primary_background_fill="linear-gradient(90deg, #2563eb, #3b82f6)",
+    button_primary_background_fill_hover="linear-gradient(90deg, #1d4ed8, #2563eb)",
+    button_primary_text_color="white",
+)
 
 # ---------------------
 # Setup
@@ -277,7 +291,36 @@ def chat(message: str, history: List[Dict[str,str]]):
 # Gradio App (Hugging Face entry point)
 # ---------------------
 def make_demo():
-    return gr.ChatInterface(fn=chat, type="messages", title="Basith-AI", description="You can ask about anything Basith Abdul's professional background.")
+    with gr.Blocks(theme=basith_theme, title="Basith-AI | Interactive Chatbot") as demo:
+        gr.HTML("""
+        <div style="text-align:center; padding: 1.5em; border-radius: 15px; background: #f1f5f9;">
+            <h1 style="margin-top:10px;">🤖 Basith-AI</h1>
+            <p style="font-size:16px; color:#475569;">
+                Hi! I'm Basith Abdul’s virtual twin. Feel free to ask me about my work experience, personal projects, or any other professional topics.
+                <br>I’ll respond just like Basith would, you might not even notice any difference. 😉
+            </p>
+        </div>
+        """)
+
+        chat_ui = gr.ChatInterface(
+            fn=chat,
+            type="messages",
+            chatbot=gr.Chatbot(
+                type="messages",
+                show_copy_button=True,
+                show_label=False,
+                height=600
+            ),
+            examples=[
+                ["Tell me about your experience at Amazon."],
+                ["What projects have you done with AI or LLMs?"],
+                ["How can I contact you about employment opportunities?"]
+            ],
+            title="Talk with Basith-AI",
+            # description="A conversational mirror of Basith Abdul — product-minded, AI-driven, and always curious.",
+        )
+
+    return demo
 
 if __name__ == "__main__":
     demo = make_demo()
