@@ -278,7 +278,7 @@ def chat(message: str, history: List[Dict[str,str]]):
 # Gradio App (Hugging Face entry point)
 # ---------------------
 def make_demo():
-    return gr.ChatInterface(fn=chat, type="messages", title="LinkedIn-style Chatbot", description="You can ask about Basith Abdul's background.")
+    return gr.ChatInterface(fn=chat, type="messages", title="Basith-AI", description="You can ask about anything Basith Abdul's professional background.")
 
 if __name__ == "__main__":
     demo = make_demo()
