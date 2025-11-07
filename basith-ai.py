@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -46,7 +45,7 @@ def read_linkedin_text() -> str:
             text = page.extract_text()
             if text:
                 linkedin_text += text
-    except Exception as e:
+    except Exception:
         linkedin_text = ""
     return linkedin_text
 
